@@ -12,6 +12,13 @@
 
 #include "pipex.h"
 
+void	terminate(const char *s, int status)
+{
+	perror(s);
+	if (status != -1)
+		exit(status);
+}
+
 int	main(int argc, char **argv, char **envp)
 {
 	int		exit_status;
@@ -19,8 +26,7 @@ int	main(int argc, char **argv, char **envp)
 	if (argc < 5)
 	{
 		errno = EINVAL;
-		perror(argv[0]);
-		exit(1);
+		terminate(argv[0], EXIT_FAILURE);
 	}
 	exit_status = pipex(argc - 1, argv + 1, envp);
 	return (exit_status);
