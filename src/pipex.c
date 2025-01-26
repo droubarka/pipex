@@ -12,36 +12,67 @@
 
 #include "pipex.h"
 
-static void	init_stdio(t_child *child, int total_childs, int *last_stdin, char **iofiles)
+int	init_stdio(t_child *child, int total_childs, int *last_stdin, char **iofiles)
 {
 	int pipefd[2];
-	int	infile;
-	int	outfile;
 
 	if (child->rank == 0)
 	{
-		infile = open(iofiles[0], O_RDONLY);
-		if (infile == -1)
-			terminate("pipex: %errno: infile", -1);
-		*last_stdin = infile;
+		*last_stdin = open(iofiles[0], O_RDONLY);
+		if (*last_stdin == -1)
+			terminate("pipex: %infile", -1); //?
 	}
-
 	if (child->rank != total_childs - 1)
 	{
-		pipe(pipefd); //?
-
+		if (pipe(pipefd) == -1)
+		{
+			terminate("pipex: pipe", -1); //?
+			return (-1);
+		}
 		child->stdio[0] = *last_stdin;
 		child->stdio[1] = pipefd[1];
 		*last_stdin = pipefd[0];
 	}
 	else
 	{
-		outfile = open(iofiles[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-		if (outfile == -1)
-			terminate("pipex: %errno: outfile", -1);
 		child->stdio[0] = *last_stdin;
-		child->stdio[1] = outfile;
+		child->stdio[1] = open(iofiles[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		if (child->stdio[1] == -1)
+			terminate("pipex: %outfile", -1); //?
 	}
+	return (0);
+}
+
+int	exec_child(t_child child)
+{
+}
+
+int	init_child(t_child child)
+{
+	pid_t	pid;
+
+	pid = fork();
+	if (pid == 0)
+	{
+		if (dup2(child->stdio[0], STDIN_FILENO) == -1) //?
+			close(STDIN_FILENO);
+		close(child->stdio[0]);
+
+		if (dup2(child->stdio[1], STDOUT_FILENO) == -1) //?
+			close(STDOUT_FILENO);
+		close(child->stdio[1]);
+
+		if (exec_command(child) == -1)
+		{
+			
+		}
+	}
+	else if (pid == -1)
+	{
+		terminate("pipex: fork", -1); //?
+		return (-1);
+	}
+	return (0);
 }
 
 int	pipex(int ac, char **av, char **envp)
@@ -66,13 +97,30 @@ int	pipex(int ac, char **av, char **envp)
 		curr_child.rank = xchild;
 		curr_child.cmd = av[xchild + 1];
 
-		init_stdio(&curr_child, total_childs, &last_stdin, iofiles);
+		if (init_stdio(&curr_child, total_childs, &last_stdin, iofiles) == -1)
+		{
+			close(last_stdin);
+			break ;
+		}
 
-//		init_child();
-//		exec_child();
+		if (init_child(curr_child) == -1)
+		{
+			close(last_stdin);
+			break ;
+		}
 
-//		close(stdio[0]);
-//		close(stdio[1]);
+		close(curr_child.stdio[0]);
+		close(curr_child.stdio[1]);
+
+		xchild++;
+	}
+
+	// free(path);
+
+	xchild = 0;
+	while (xchild < total_childs)
+	{
+		wait(NULL);
 		xchild++;
 	}
 }
