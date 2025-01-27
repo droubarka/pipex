@@ -39,33 +39,58 @@ int	init_stdio(t_child *child, int total_childs, int *last_stdin, char **iofiles
 		child->stdio[1] = open(iofiles[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 		if (child->stdio[1] == -1)
 			terminate("pipex: %outfile", -1); //?
+		*last_stdin = -1;
 	}
 	return (0);
 }
 
-int	exec_child(t_child child)
+int	exec_child(t_child *child)
 {
+	char	*pathname;
+	char	**args;
+
+	args = ft_split(child->cmd, ' '); //? NULL
+	pathname = args[0];
+
+	if (ft_strchr(pathname, '/') == NULL)
+	{
+		while ()
+		{
+			if ()
+				pathname = ft_join(path, pathname);
+		}
+	}
+
+	if (pathname != NULL)
+		execve(pathname, args, child->envp);
+
+	return (-1);
 }
 
-int	init_child(t_child child)
+int	init_child(t_child *child)
 {
 	pid_t	pid;
 
-	pid = fork();
+	pid = retry_call(fork, 5);
 	if (pid == 0)
 	{
-		if (dup2(child->stdio[0], STDIN_FILENO) == -1) //?
-			close(STDIN_FILENO);
-		close(child->stdio[0]);
+		if (dup2(child->stdio[0], STDIN_FILENO) == -1)
+		{
+			close(child->stdio[0]);
+			terminate(NULL, EXIT_FAILURE); //?
+		}
 
-		if (dup2(child->stdio[1], STDOUT_FILENO) == -1) //?
-			close(STDOUT_FILENO);
+		if (dup2(child->stdio[1], STDOUT_FILENO) == -1)
+		{
+			close(child->stdio[1]);
+			terminate(NULL, EXIT_FAILURE); //?
+		}
+
+		close(child->stdio[0]);
 		close(child->stdio[1]);
 
 		if (exec_command(child) == -1)
-		{
-			
-		}
+			terminate(NULL, EXIT_FAILURE); //?
 	}
 	else if (pid == -1)
 	{
@@ -83,7 +108,7 @@ int	pipex(int ac, char **av, char **envp)
 	char	*iofiles[2];
 	t_child	curr_child;
 
-	curr_child.path = get_path(envp);
+	curr_child.path = get_path(envp); //? NULL
 	curr_child.envp = envp;
 
 	iofiles[0] = av[0];
@@ -105,6 +130,8 @@ int	pipex(int ac, char **av, char **envp)
 
 		if (init_child(curr_child) == -1)
 		{
+			close(curr_child.stdio[0]);
+			close(curr_child.stdio[1]);
 			close(last_stdin);
 			break ;
 		}
@@ -120,7 +147,10 @@ int	pipex(int ac, char **av, char **envp)
 	xchild = 0;
 	while (xchild < total_childs)
 	{
-		wait(NULL);
+		if (wait(NULL) == -1)
+			break;
 		xchild++;
 	}
+
+	return (EXIT_SUCCESS);
 }
