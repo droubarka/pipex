@@ -15,6 +15,10 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <sys/wait.h>
+
+#include "../libft/libft.h"
+
 
 #ifndef PIPEX_H
 #define PIPEX_H
@@ -26,7 +30,12 @@ typedef struct	s_child {
 	int		stdio[2];
 	char	**path;
 	char	**envp;
-	char	*cmd;
+	char	*cmdline;
 } t_child;
+
+void	terminate(const char *s, int status);
+int		free_all(char **);
+pid_t	retry_call(pid_t (*func)(void), int x);
+char	**get_path(char **envp);
 
 #endif

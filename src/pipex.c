@@ -46,11 +46,11 @@ int	init_stdio(t_child *child, int total_childs, int *last_stdin, char **iofiles
 
 int	exec_child(t_child *child)
 {
-	char	**args;
+	char	**argv;
 	char	*pathname;
 	char	*pathname_ptr;
 
-	argv = ft_split(child->cmd, ' '); //? NULL
+	argv = ft_split(child->cmdline, ' '); //? NULL
 
 	if (argv[0] == NULL)
 		terminate("pipex: command not found", EXIT_FAILURE); //? empty
@@ -60,7 +60,7 @@ int	exec_child(t_child *child)
 		pathname = NULL;
 		while (*child->path)
 		{
-			pathname_ptr = ft_join(child->path, argv[0]); //? NULL
+			pathname_ptr = ft_strjoin(*child->path, argv[0]); //? NULL
 
 			if (access(pathname_ptr, F_OK))
 			{
@@ -87,21 +87,20 @@ int	exec_child(t_child *child)
 		if (pathname == NULL)
 			terminate("pipex: command not found", EXIT_FAILURE); //?
 
-		execve(pathname, argv, child->envp);
-		terminate("pipex: execve", EXIT_FAILURE); //?
+		return (execve(pathname, argv, child->envp));
 	}
 
 	if (child->path != NULL)
 		free_all(child->path);
 
-	return (-1);
+	return (execve(argv[0], argv, child->envp));
 }
 
 int	init_child(t_child *child)
 {
 	pid_t	pid;
 
-	pid = retry_call(fork, 5);
+	pid = retry_call(&fork, 5);
 	if (pid == 0)
 	{
 		if (dup2(child->stdio[0], STDIN_FILENO) == -1)
@@ -119,8 +118,8 @@ int	init_child(t_child *child)
 		close(child->stdio[0]);
 		close(child->stdio[1]);
 
-		if (exec_command(child) == -1)
-			terminate(NULL, EXIT_FAILURE); //?
+		if (exec_child(child) == -1)
+			terminate("pipex: execve", EXIT_FAILURE); //?
 	}
 	else if (pid == -1)
 	{
@@ -150,7 +149,7 @@ int	pipex(int ac, char **av, char **envp)
 	while (xchild < total_childs)
 	{
 		curr_child.rank = xchild;
-		curr_child.cmd = av[xchild + 1];
+		curr_child.cmdline = av[xchild + 1];
 
 		if (init_stdio(&curr_child, total_childs, &last_stdin, iofiles) == -1)
 		{
@@ -158,7 +157,7 @@ int	pipex(int ac, char **av, char **envp)
 			break ;
 		}
 
-		if (init_child(curr_child) == -1)
+		if (init_child(&curr_child) == -1)
 		{
 			close(curr_child.stdio[0]);
 			close(curr_child.stdio[1]);
@@ -172,7 +171,7 @@ int	pipex(int ac, char **av, char **envp)
 		xchild++;
 	}
 
-	// free(path);
+	free_all(curr_child.path);
 
 	xchild = 0;
 	while (xchild < total_childs)
