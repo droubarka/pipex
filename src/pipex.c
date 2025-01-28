@@ -46,23 +46,53 @@ int	init_stdio(t_child *child, int total_childs, int *last_stdin, char **iofiles
 
 int	exec_child(t_child *child)
 {
-	char	*pathname;
 	char	**args;
+	char	*pathname;
+	char	*pathname_ptr;
 
-	args = ft_split(child->cmd, ' '); //? NULL
-	pathname = args[0];
+	argv = ft_split(child->cmd, ' '); //? NULL
 
-	if (ft_strchr(pathname, '/') == NULL)
+	if (argv[0] == NULL)
+		terminate("pipex: command not found", EXIT_FAILURE); //? empty
+
+	if (ft_strchr(argv[0], '/') == NULL)
 	{
-		while ()
+		pathname = NULL;
+		while (*child->path)
 		{
-			if ()
-				pathname = ft_join(path, pathname);
+			pathname_ptr = ft_join(child->path, argv[0]); //? NULL
+
+			if (access(pathname_ptr, F_OK))
+			{
+				if (access(pathname_ptr, X_OK))
+				{
+					if (pathname != NULL)
+						free(pathname);
+
+					pathname = pathname_ptr;
+					free_all(child->path);
+					break ;
+				}
+
+				if (pathname == NULL)
+					pathname = ft_strdup(pathname_ptr); //? NULL
+			}
+
+			free(pathname_ptr);
+			free(child->path);
+
+			child->path++;
 		}
+
+		if (pathname == NULL)
+			terminate("pipex: command not found", EXIT_FAILURE); //?
+
+		execve(pathname, argv, child->envp);
+		terminate("pipex: execve", EXIT_FAILURE); //?
 	}
 
-	if (pathname != NULL)
-		execve(pathname, args, child->envp);
+	if (child->path != NULL)
+		free_all(child->path);
 
 	return (-1);
 }
