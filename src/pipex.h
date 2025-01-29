@@ -34,7 +34,7 @@ typedef struct	s_child {
 } t_child;
 
 void	terminate(const char *s, int status);
-int		free_all(char **);
+void	free_all(char **av);
 pid_t	retry_call(pid_t (*func)(void), int x);
 char	**get_path(char **envp);
 

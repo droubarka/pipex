@@ -31,3 +31,21 @@ int	main(int argc, char **argv, char **envp)
 	exit_status = pipex(argc - 1, argv + 1, envp);
 	return (exit_status);
 }
+
+void	free_all(char **av)
+{
+	if (av == NULL)
+		return ;
+	while (*av)
+	{
+		free(*av++);
+	}
+}
+
+pid_t	retry_call(pid_t (*func)(void), int x)
+{
+	if (x)
+	{
+		return func();
+	}
+}
