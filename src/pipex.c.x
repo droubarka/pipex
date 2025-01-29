@@ -12,38 +12,6 @@
 
 #include "pipex.h"
 
-int	init_stdio(t_child *child, int total_childs, int *last_stdin, char **iofiles)
-{
-	int pipefd[2];
-
-	if (child->rank == 0)
-	{
-		*last_stdin = open(iofiles[0], O_RDONLY);
-		if (*last_stdin == -1)
-			terminate("pipex: %infile", -1); //?
-	}
-	if (child->rank != total_childs - 1)
-	{
-		if (pipe(pipefd) == -1)
-		{
-			terminate("pipex: pipe", -1); //?
-			return (-1);
-		}
-		child->stdio[0] = *last_stdin;
-		child->stdio[1] = pipefd[1];
-		*last_stdin = pipefd[0];
-	}
-	else
-	{
-		child->stdio[0] = *last_stdin;
-		child->stdio[1] = open(iofiles[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-		if (child->stdio[1] == -1)
-			terminate("pipex: %outfile", -1); //?
-		*last_stdin = -1;
-	}
-	return (0);
-}
-
 int	exec_child(t_child *child)
 {
 	char	**argv;
