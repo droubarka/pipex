@@ -1,0 +1,72 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   setup_child.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mait-oub <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/01/19 09:57:46 by mait-oub          #+#    #+#             */
+/*   Updated: 2025/01/30 04:40:38 by mait-oub         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "pipex.h"
+
+static void	xsleep(unsigned int seconds)
+{
+	int	counter;
+
+	while (seconds--)
+	{
+		counter = 0;
+		while (counter != -1)
+			counter++;
+	}
+}
+
+static pid_t	retry_fork(unsigned int max_retries)
+{
+	pid_t	pid;
+	int		seconds;
+
+	seconds = 1;
+	while (max_retries--)
+	{
+		pid = fork();
+		if (pid != -1)
+			return (pid);
+		terminate("fork: retry", -1);
+		xsleep(seconds);
+		seconds *= 2;
+	}
+	terminate("fork", -1);
+	return (-1);
+}
+
+int	setup_child(t_child *child)
+{
+	pid_t	pid;
+
+	pid = retry_fork(4);
+	if (pid == -1)
+		return (-1);
+	if (pid == 0)
+	{
+		if (dup2(child->stdio[0], STDIN_FILENO) == -1)
+		{
+			free_array(child->path);
+			close_stdio(child->stdio);
+			terminate(NULL, EXIT_FAILURE);
+		}
+		if (dup2(child->stdio[1], STDOUT_FILENO) == -1)
+		{
+			free_array(child->path);
+			close_stdio(child->stdio);
+			terminate(NULL, EXIT_FAILURE);
+		}
+		close_stdio(child->stdio);
+		if (exec_child(child) == -1)
+			terminate(NULL, EXIT_FAILURE);
+	}
+	return (0);
+}
