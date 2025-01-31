@@ -31,8 +31,12 @@ static pid_t	retry_fork(unsigned int max_retries)
 	return (-1);
 }
 
-static int	setup_stdio(t_child *child, int *stdio)
+static int	setup_stdio(t_child *child)
 {
+	int	stdio[2];
+
+	stdio[0] = STDIN_FILENO;
+	stdio[1] = STDOUT_FILENO;
 	if (dup2(child->stdio[0], stdio[0]) == -1)
 	{
 		free_array(child->path);
@@ -47,28 +51,22 @@ static int	setup_stdio(t_child *child, int *stdio)
 		terminate(NULL, EXIT_FAILURE);
 	}
 	close_stdio(child->stdio);
+	child->stdin[0] = stdin[0];
+	child->stdin[1] = stdin[1];
 	return (0);
 }
 
 int	setup_child(t_child *child)
 {
 	pid_t	pid;
-	int		stdio[2];
 
 	pid = retry_fork(4);
 	if (pid == -1)
 		return (-1);
 	if (pid == 0)
 	{
-		stdio[0] = STDIN_FILENO;
-		stdio[1] = STDOUT_FILENO;
-		setup_stdio(child, stdio);
-		if (execute_child(child) == -1)
-		{
-			free_array(child->path);
-			close_stdio(stdio);
-			terminate(NULL, EXIT_FAILURE);
-		}
+		setup_stdio(child);
+		execute_child(child);
 	}
 	return (0);
 }
