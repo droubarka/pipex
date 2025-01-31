@@ -23,21 +23,6 @@ static void	execute_absolute_path(t_child *child, char **argv)
 	}
 }
 
-static char	*pathjoin(char *path, char *filename)
-{
-	char	*pathname;
-	char	*temp;
-
-	pathname = ft_strjoin(path, "/");
-	if (pathname != NULL)
-	{
-		temp = pathname;
-		pathname = ft_strjoin(pathname, filename);
-		free(temp);
-	}
-	return (pathname);
-}
-
 static void	handle_exit(t_child *child, char **argv, char *addr)
 {
 	free(addr);
@@ -73,11 +58,7 @@ static void	get_pathname(t_child *child, char **argv, char **pathname)
 		}
 		free_array((char *[]){temp, *child->path++});
 	}
-}
-
-static void	command_not_found(char *command)
-{
-	write(2, "", );
+	free_array(child->path);
 }
 
 static void	execute_from_path(t_child *child, char **argv)
@@ -86,10 +67,10 @@ static void	execute_from_path(t_child *child, char **argv)
 
 	pathname = NULL;
 	get_pathname(child, argv, &pathname);
-	free_array(child->path);
 	if (pathname == NULL)
 	{
-		command_not_found(argv[0]);
+		write(2, argv[0], ft_strlen(argv[0]));
+		write(2, ": command not found\n", 20);
 		free_array(argv);
 		close_stdio(child->stdio);
 		terminate(NULL, EXIT_FAILURE);
@@ -119,7 +100,8 @@ void	execute_child(t_child *child)
 		free_array(argv);
 		free_array(child->path);
 		close_stdio(child->stdio);
-		terminate("command '' not found", EXIT_FAILURE);
+		write(2, ": command not found\n", 20);
+		terminate(NULL, EXIT_FAILURE);
 	}
 	if (ft_strchr(argv[0], '/') == NULL)
 		execute_from_path(child, argv);
