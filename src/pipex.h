@@ -27,12 +27,13 @@ typedef struct s_child {
 
 void	terminate(char *s, int status);
 
-int		setup_child_io(
-			t_child *child, int n_childs, int *upstream, char **iofiles);
+//int		setup_stdio(t_child *child, int n_childs, int *upstream, char **iofiles);
 int		setup_child(t_child *child);
-int		exec_child(t_child *child);
+int		execute_child(t_child *child);
 
 void	free_array(char **array);
 void	close_stdio(int *stdio);
+void	xsleep(unsigned int seconds);
+
 
 #endif

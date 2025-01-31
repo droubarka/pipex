@@ -1,28 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   setup_child_io.c                                   :+:      :+:    :+:   */
+/*   setup_stdio.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mait-oub <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/19 09:57:46 by mait-oub          #+#    #+#             */
-/*   Updated: 2025/01/29 09:22:37 by mait-oub         ###   ########.fr       */
+/*   Updated: 2025/01/31 00:03:43 by mait-oub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-static int	setup_last_child_io(t_child *child, int *upstream, char *outfile)
+static int	setup_stdio_final(t_child *child, int *upstream, char *outfile)
 {
 	child->stdio[0] = *upstream;
+	*upstream = -1;
 	child->stdio[1] = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (child->stdio[1] == -1)
-		terminate(outfile, -1);
-	*upstream = -1;
+		return (-1);
 	return (0);
 }
 
-int	setup_child_io(t_child *child, int n_childs, int *upstream, char **iofiles)
+int	setup_stdio(t_child *child, int n_childs, int *upstream, char **iofiles)
 {
 	int	pipefd[2];
 
@@ -34,7 +34,8 @@ int	setup_child_io(t_child *child, int n_childs, int *upstream, char **iofiles)
 	}
 	if (child->rank == n_childs - 1)
 	{
-		setup_last_child_io(child, upstream, iofiles[1]);
+		if (setup_stdio_final(child, upstream, iofiles[1]) == -1)
+			terminate(iofiles[1], -1);
 		return (0);
 	}
 	if (pipe(pipefd) == -1)
