@@ -61,14 +61,14 @@ void	terminate(char *s, int status)
 
 	if (status == -2)
 	{
-		argv_0 = s;
+		ft_strlcpy(argv_0, s, PATH_MAX);
 		return ;
 	}
 	if (s != NULL)
 	{
-		ft_strlcat(buff, argv_0);
-		ft_strlcat(buff, ": ");
-		ft_strlcat(buff, s);
+		ft_strlcat(buff, argv_0, PATH_MAX + 128);
+		ft_strlcat(buff, ": ", PATH_MAX + 128);
+		ft_strlcat(buff, s, PATH_MAX + 128);
 		perror(buff);
 	}
 	if (status != -1)
