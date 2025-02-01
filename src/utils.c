@@ -38,3 +38,39 @@ char	*pathjoin(char *path, char *filename)
 	}
 	return (pathname);
 }
+
+void	close_stdio(int *stdio)
+{
+	close(stdio[0]);
+	close(stdio[1]);
+}
+
+void	free_array(char **array)
+{
+	while (*array)
+	{
+		free(array);
+		array++;
+	}
+}
+
+void	terminate(char *s, int status)
+{
+	static char	argv_0[PATH_MAX];
+	char		buff[PATH_MAX + 128];
+
+	if (status == -2)
+	{
+		argv_0 = s;
+		return ;
+	}
+	if (s != NULL)
+	{
+		ft_strlcat(buff, argv_0);
+		ft_strlcat(buff, ": ");
+		ft_strlcat(buff, s);
+		perror(buff);
+	}
+	if (status != -1)
+		exit(status);
+}

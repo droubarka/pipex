@@ -51,8 +51,8 @@ static int	setup_stdio(t_child *child)
 		terminate(NULL, EXIT_FAILURE);
 	}
 	close_stdio(child->stdio);
-	child->stdin[0] = stdin[0];
-	child->stdin[1] = stdin[1];
+	child->stdio[0] = stdio[0];
+	child->stdio[1] = stdio[1];
 	return (0);
 }
 

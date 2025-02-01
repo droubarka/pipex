@@ -16,7 +16,7 @@ int	main(int argc, char **argv, char **envp)
 {
 	int	exit_status;
 
-	if (argc < 5)
+	if (argc != 5)
 	{
 		errno = EINVAL;
 		perror(argv[0]);
