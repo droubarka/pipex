@@ -22,6 +22,7 @@ int	main(int argc, char **argv, char **envp)
 		perror(argv[0]);
 		exit(EXIT_FAILURE);
 	}
+	terminate(argv[0], -2);
 	exit_status = pipex(argc - 1, argv + 1, envp);
 	return (exit_status);
 }

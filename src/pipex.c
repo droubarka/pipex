@@ -38,7 +38,7 @@ static void	init_childs(t_child *child, int nchilds, char **av, char **iofiles)
 			close(last_stdin);
 			break ;
 		}
-		if (setup_child(child) == -1)
+		if (setup_child(child, last_stdin) == -1)
 		{
 			close(last_stdin);
 			close_stdio(child->stdio);

@@ -35,19 +35,20 @@ static void	handle_exit(t_child *child, char **argv, char *addr)
 static void	get_pathname(t_child *child, char **argv, char **pathname)
 {
 	char	*temp;
+	size_t	idx;
 
-	while (*child->path)
+	idx = 0;
+	while (child->path[idx])
 	{
-		temp = pathjoin(*child->path, argv[0]);
+		temp = pathjoin(child->path[idx++], argv[0]);
 		if (temp == NULL)
 			handle_exit(child, argv, *pathname);
-		if (access(temp, F_OK))
+		if (access(temp, F_OK) == 0)
 		{
-			if (access(temp, X_OK))
+			if (access(temp, X_OK) == 0)
 			{
-				free(*pathname);
-				*pathname = temp;
-				break ;
+				(free(*pathname), *pathname = temp);
+				return ;
 			}
 			if (*pathname == NULL)
 			{
@@ -56,9 +57,8 @@ static void	get_pathname(t_child *child, char **argv, char **pathname)
 					handle_exit(child, argv, temp);
 			}
 		}
-		free_array((char *[]){temp, *child->path++});
+		free(temp);
 	}
-	free_array(child->path);
 }
 
 static void	execute_from_path(t_child *child, char **argv)
@@ -67,6 +67,7 @@ static void	execute_from_path(t_child *child, char **argv)
 
 	pathname = NULL;
 	get_pathname(child, argv, &pathname);
+	free_array(child->path);
 	if (pathname == NULL)
 	{
 		write(2, argv[0], ft_strlen(argv[0]));

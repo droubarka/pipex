@@ -56,7 +56,7 @@ static int	setup_stdio(t_child *child)
 	return (0);
 }
 
-int	setup_child(t_child *child)
+int	setup_child(t_child *child, int last_stdin)
 {
 	pid_t	pid;
 
@@ -65,6 +65,7 @@ int	setup_child(t_child *child)
 		return (-1);
 	if (pid == 0)
 	{
+		close(last_stdin);
 		setup_stdio(child);
 		execute_child(child);
 	}

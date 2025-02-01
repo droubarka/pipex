@@ -33,7 +33,7 @@ typedef struct s_child {
 
 int		pipex(int ac, char **av, char **envp);
 int		init_stdio(t_child *child, int n_childs, int *upstream, char **iofiles);
-int		setup_child(t_child *child);
+int		setup_child(t_child *child, int last_stdin);
 void	execute_child(t_child *child);
 
 void	xsleep(unsigned int seconds);
