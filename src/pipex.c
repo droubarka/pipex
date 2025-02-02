@@ -23,10 +23,34 @@ static char	**get_path(char **envp)
 	return (ft_split("", ':'));
 }
 
-static void	init_childs(t_child *child, int nchilds, char **av, char **iofiles)
+static int	wait_childs(pid_t last_child)
 {
-	int	xchild;
-	int	last_stdin;
+	pid_t	pid;
+	int		stat_loc;
+	int		exit_status;
+
+	exit_status = EXIT_FAILURE;
+	while (1)
+	{
+		pid = wait(&stat_loc);
+		if (pid == last_child)
+		{
+			if (WIFEXITED(stat_loc))
+				exit_status = WEXITSTATUS(stat_loc);
+			else
+				exit_status = WTERMSIG(stat_loc);
+		}
+		else if (pid == -1)
+			break ;
+	}
+	return (exit_status);
+}
+
+static int	init_childs(t_child *child, int nchilds, char **av, char **iofiles)
+{
+	int		xchild;
+	int		last_stdin;
+	pid_t	last_child;
 
 	xchild = 0;
 	while (xchild < nchilds)
@@ -34,39 +58,26 @@ static void	init_childs(t_child *child, int nchilds, char **av, char **iofiles)
 		child->rank = xchild;
 		child->cmdline = av[xchild + 1];
 		if (init_stdio(child, nchilds, &last_stdin, iofiles) == -1)
-		{
-			close(last_stdin);
 			break ;
-		}
-		if (setup_child(child, last_stdin) == -1)
+		last_child = setup_child(child, last_stdin);
+		if (last_child == -1)
 		{
-			close(last_stdin);
 			close_stdio(child->stdio);
 			break ;
 		}
 		close_stdio(child->stdio);
 		xchild++;
 	}
+	if (last_stdin != -1)
+		close(last_stdin);
 	free_array(child->path);
-}
-
-static int	wait_childs(int total_childs)
-{
-	int	xchild;
-
-	xchild = 0;
-	while (xchild < total_childs)
-	{
-		if (wait(NULL) == -1)
-			return (EXIT_FAILURE);
-		xchild++;
-	}
-	return (EXIT_SUCCESS);
+	return (wait_childs(last_child));
 }
 
 int	pipex(int ac, char **av, char **envp)
 {
 	int		total_childs;
+	int		exit_status;
 	char	*iofiles[2];
 	t_child	child;
 
@@ -77,6 +88,6 @@ int	pipex(int ac, char **av, char **envp)
 	if (child.path == NULL)
 		return (EXIT_FAILURE);
 	total_childs = ac - 2;
-	init_childs(&child, total_childs, av, iofiles);
-	return (wait_childs(total_childs));
+	exit_status = init_childs(&child, total_childs, av, iofiles);
+	return (exit_status);
 }
