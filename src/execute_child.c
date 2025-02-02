@@ -64,16 +64,20 @@ static void	get_pathname(t_child *child, char **argv, char **pathname)
 static void	execute_from_path(t_child *child, char **argv)
 {
 	char	*pathname;
+	char	*buff;
 
 	pathname = NULL;
 	get_pathname(child, argv, &pathname);
 	free_array(child->path);
 	if (pathname == NULL)
 	{
-		write(2, argv[0], ft_strlen(argv[0]));
-		write(2, ": command not found\n", 20);
+		buff = ft_strjoin(argv[0], ": command not found\n");
 		free_array(argv);
 		close_stdio(child->stdio);
+		if (buff == NULL)
+			terminate(NULL, EXIT_FAILURE);
+		write(2, buff, ft_strlen(buff));
+		free(buff);
 		terminate(NULL, 127);
 	}
 	if (execve(pathname, argv, child->envp) == -1)
