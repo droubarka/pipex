@@ -47,15 +47,15 @@ void	close_stdio(int *stdio)
 
 void	free_array(char **array)
 {
-	char	**ptr;
+	char	**root;
 
-	ptr = array;
+	root = array;
 	while (*array)
 	{
 		free(*array);
 		array++;
 	}
-	free(ptr);
+	free(root);
 }
 
 void	terminate(char *s, int status)
@@ -70,12 +70,12 @@ void	terminate(char *s, int status)
 	}
 	if (s != NULL)
 	{
-		buff[0] = 0;
+		buff[0] = '\0';
 		ft_strlcat(buff, argv_0, PATH_MAX + 128);
 		ft_strlcat(buff, ": ", PATH_MAX + 128);
 		ft_strlcat(buff, s, PATH_MAX + 128);
 		perror(buff);
 	}
-	if (status != -1)
+	if (-1 < status)
 		exit(status);
 }

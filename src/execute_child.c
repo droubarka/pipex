@@ -19,7 +19,7 @@ static void	execute_absolute_path(t_child *child, char **argv)
 	{
 		free_array(argv);
 		close_stdio(child->stdio);
-		terminate(NULL, EXIT_FAILURE);
+		terminate(NULL, 126);
 	}
 }
 
@@ -74,14 +74,14 @@ static void	execute_from_path(t_child *child, char **argv)
 		write(2, ": command not found\n", 20);
 		free_array(argv);
 		close_stdio(child->stdio);
-		terminate(NULL, EXIT_FAILURE);
+		terminate(NULL, 127);
 	}
 	if (execve(pathname, argv, child->envp) == -1)
 	{
 		free(pathname);
 		free_array(argv);
 		close_stdio(child->stdio);
-		terminate(NULL, EXIT_FAILURE);
+		terminate(NULL, 126);
 	}
 }
 
@@ -102,7 +102,7 @@ void	execute_child(t_child *child)
 		free_array(child->path);
 		close_stdio(child->stdio);
 		write(2, ": command not found\n", 20);
-		terminate(NULL, EXIT_FAILURE);
+		terminate(NULL, 127);
 	}
 	if (ft_strchr(argv[0], '/') == NULL)
 		execute_from_path(child, argv);
