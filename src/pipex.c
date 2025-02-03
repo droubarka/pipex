@@ -46,10 +46,9 @@ static int	wait_childs(pid_t last_child)
 	return (exit_status);
 }
 
-static int	init_childs(t_child *child, int nchilds, char **av, char **iofiles)
+static int	init_childs(t_child *child, int nchilds, char **av, int last_stdin)
 {
 	int		xchild;
-	int		last_stdin;
 	pid_t	last_child;
 
 	xchild = 0;
@@ -57,7 +56,7 @@ static int	init_childs(t_child *child, int nchilds, char **av, char **iofiles)
 	{
 		child->rank = xchild;
 		child->cmdline = av[xchild + 1];
-		if (init_stdio(child, nchilds, &last_stdin, iofiles) == -1)
+		if (init_stdio(child, nchilds, &last_stdin) == -1)
 			break ;
 		last_child = setup_child(child, last_stdin);
 		if (last_child == -1)
@@ -74,20 +73,19 @@ static int	init_childs(t_child *child, int nchilds, char **av, char **iofiles)
 	return (wait_childs(last_child));
 }
 
-int	pipex(int ac, char **av, char **envp)
+int	pipex(int ac, char **av, char **envp, int upstream)
 {
 	int		total_childs;
 	int		exit_status;
-	char	*iofiles[2];
 	t_child	child;
 
-	iofiles[0] = av[0];
-	iofiles[1] = av[ac - 1];
-	child.envp = envp;
 	child.path = get_path(envp);
 	if (child.path == NULL)
 		return (EXIT_FAILURE);
+	child.envp = envp;
+	child.iofiles[0] = av[0];
+	child.iofiles[1] = av[ac - 1];
 	total_childs = ac - 2;
-	exit_status = init_childs(&child, total_childs, av, iofiles);
+	exit_status = init_childs(&child, total_childs, av, upstream);
 	return (exit_status);
 }

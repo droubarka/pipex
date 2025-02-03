@@ -23,6 +23,6 @@ int	main(int argc, char **argv, char **envp)
 		exit(EXIT_FAILURE);
 	}
 	terminate(argv[0], -2);
-	exit_status = pipex(argc - 1, argv + 1, envp);
+	exit_status = pipex(argc - 1, argv + 1, envp, -1);
 	return (exit_status);
 }

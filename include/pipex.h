@@ -29,10 +29,13 @@ typedef struct s_child {
 	char	**path;
 	char	**envp;
 	char	*cmdline;
+
+	char	*iofiles[2];
+
 }	t_child;
 
-int		pipex(int ac, char **av, char **envp);
-int		init_stdio(t_child *child, int n_childs, int *upstream, char **iofiles);
+int		pipex(int ac, char **av, char **envp, int upstream);
+int		init_stdio(t_child *child, int n_childs, int *upstream);
 pid_t	setup_child(t_child *child, int last_stdin);
 void	execute_child(t_child *child);
 
