@@ -33,16 +33,20 @@ static int	wait_childs(pid_t last_child)
 	while (1)
 	{
 		pid = wait(&stat_loc);
-		if (pid == last_child)
+		if (pid == -1)
+			break ;
+		else if (pid == last_child)
 		{
 			if (WIFEXITED(stat_loc))
 				exit_status = WEXITSTATUS(stat_loc);
 			else
 				exit_status = WTERMSIG(stat_loc);
 		}
-		else if (pid == -1)
-			break ;
 	}
+//	if (last_child == -1)
+//		return (-1);
+//	else if (last_child == 0)
+//		return (-1);
 	return (exit_status);
 }
 
@@ -52,6 +56,7 @@ static int	init_childs(t_child *child, int nchilds, char **av, int last_stdin)
 	pid_t	last_child;
 
 	xchild = 0;
+	last_child = 0;
 	while (xchild < nchilds)
 	{
 		child->rank = xchild;

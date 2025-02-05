@@ -41,14 +41,14 @@ static int	setup_stdio(t_child *child)
 	{
 		free_array(child->path);
 		close_stdio(child->stdio);
-		terminate(NULL, EXIT_FAILURE);
+		terminate("dup2 failed", EXIT_FAILURE);
 	}
 	if (dup2(child->stdio[1], stdio[1]) == -1)
 	{
+		close(stdio[0]);
 		free_array(child->path);
 		close_stdio(child->stdio);
-		close(stdio[0]);
-		terminate(NULL, EXIT_FAILURE);
+		terminate("dup2 failed", EXIT_FAILURE);
 	}
 	close_stdio(child->stdio);
 	child->stdio[0] = stdio[0];

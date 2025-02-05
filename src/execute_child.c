@@ -17,9 +17,10 @@ static void	execute_absolute_path(t_child *child, char **argv)
 	free_array(child->path);
 	if (execve(argv[0], argv, child->envp) == -1)
 	{
+		terminate(argv[0], -1);
 		free_array(argv);
 		close_stdio(child->stdio);
-		terminate(NULL, 126);
+		exit(126);
 	}
 }
 
@@ -29,7 +30,7 @@ static void	handle_exit(t_child *child, char **argv, char *addr)
 	free_array(argv);
 	free_array(child->path);
 	close_stdio(child->stdio);
-	terminate(NULL, EXIT_FAILURE);
+	terminate("malloc failed", EXIT_FAILURE);
 }
 
 static void	get_pathname(t_child *child, char **argv, char **pathname)
@@ -75,17 +76,18 @@ static void	execute_from_path(t_child *child, char **argv)
 		free_array(argv);
 		close_stdio(child->stdio);
 		if (buff == NULL)
-			terminate(NULL, EXIT_FAILURE);
+			terminate("malloc failed", EXIT_FAILURE);
 		write(2, buff, ft_strlen(buff));
 		free(buff);
-		terminate(NULL, 127);
+		exit(127);
 	}
 	if (execve(pathname, argv, child->envp) == -1)
 	{
+		terminate(pathname, -1);
 		free(pathname);
 		free_array(argv);
 		close_stdio(child->stdio);
-		terminate(NULL, 126);
+		exit(126);
 	}
 }
 
@@ -98,7 +100,7 @@ void	execute_child(t_child *child)
 	{
 		free_array(child->path);
 		close_stdio(child->stdio);
-		terminate(NULL, EXIT_FAILURE);
+		terminate("malloc failed", EXIT_FAILURE);
 	}
 	if (argv[0] == NULL)
 	{
@@ -106,7 +108,7 @@ void	execute_child(t_child *child)
 		free_array(child->path);
 		close_stdio(child->stdio);
 		write(2, ": command not found\n", 20);
-		terminate(NULL, 127);
+		exit(127);
 	}
 	if (ft_strchr(argv[0], '/') == NULL)
 		execute_from_path(child, argv);
