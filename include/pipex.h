@@ -22,6 +22,7 @@
 # include <limits.h>
 
 # include "../libft/libft.h"
+# include "../get_next_line/get_next_line.h"
 
 typedef struct s_child {
 	int		rank;
@@ -44,5 +45,7 @@ char	*pathjoin(char *path, char *filename);
 void	close_stdio(int *stdio);
 void	free_array(char **array);
 void	terminate(char *s, int status);
+
+int		heredoc(char *limiter);
 
 #endif
