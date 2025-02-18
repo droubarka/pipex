@@ -14,18 +14,15 @@
 
 static int	init_stdio_final(t_child *child, int *upstream)
 {
-	char	*outfile;
-
 	child->stdio[0] = *upstream;
 	*upstream = -1;
-	outfile = child->iofiles[1];
-	child->stdio[1] = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	child->stdio[1] = open(child->iofiles[1], child->oflag, 0644);
 	if (child->stdio[1] == -1)
 		return (-1);
 	return (0);
 }
 
-int	init_stdio(t_child *child, int n_childs, int *upstream)
+int	init_stdio(t_child *child, int nchilds, int *upstream)
 {
 	int	pipefd[2];
 
@@ -35,7 +32,7 @@ int	init_stdio(t_child *child, int n_childs, int *upstream)
 		if (*upstream == -1)
 			terminate(child->iofiles[0], -1);
 	}
-	if (child->rank == n_childs - 1)
+	if (child->rank == nchilds - 1)
 	{
 		if (init_stdio_final(child, upstream) == -1)
 			terminate(child->iofiles[1], -1);

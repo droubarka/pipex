@@ -34,6 +34,7 @@ static int	create_tempfile(char **tempfile_path)
 	tempfile = open(*tempfile_path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 	if (tempfile == -1)
 	{
+		terminate(*tempfile_path, -1);
 		free(*tempfile_path);
 		*tempfile_path = make_tempfile(".xsh-thd-");
 		if (*tempfile_path == NULL)
@@ -49,7 +50,23 @@ static int	create_tempfile(char **tempfile_path)
 	return (tempfile);
 }
 
-static int	get_user_lines(int tempfile, char *limiter)
+static int	raise_warning(char *argv_0, char *limiter)
+{
+	char	warning[WARN_MAX];
+	char	*warn_msg;
+
+	warn_msg = ": warning: here-document delimited by end-of-file (wanted `";
+	*warning = '\0';
+	ft_strlcat(warning, "\n", WARN_MAX);
+	ft_strlcat(warning, argv_0, WARN_MAX);
+	ft_strlcat(warning, warn_msg, WARN_MAX);
+	ft_strlcat(warning, limiter, WARN_MAX);
+	ft_strlcat(warning, "')\n", WARN_MAX);
+	write(STDERR_FILENO, warning, ft_strlen(warning));
+	return (0);
+}
+
+static int	process_heredoc(char *argv_0, int tempfile, char *limiter)
 {
 	size_t	lmtr_len;
 	char	*line;
@@ -57,33 +74,28 @@ static int	get_user_lines(int tempfile, char *limiter)
 	lmtr_len = ft_strlen(limiter);
 	while (1)
 	{
-		write(2, "heredoc> ", 9); //?
+		write(STDERR_FILENO, "> ", 2);
 		line = get_next_line(STDIN_FILENO);
 		if (line == NULL && errno == ENOMEM)
-		{
-			terminate("malloc failed", -1);
-			close(tempfile);
-			return (-1);
-		}
-		if (line == NULL) //?
-		{
-			terminate("warning: here-document at line %n delimited by end-of-file (wanted `%eof')", -1);
-			close(tempfile);
-			return (0);
-		}
+			return (terminate("malloc failed", -1));
+		if (line == NULL)
+			return (raise_warning(argv_0, limiter));
 		if (!ft_strncmp(line, limiter, lmtr_len) && line[lmtr_len] == '\n')
 		{
 			free(line);
-			close(tempfile);
 			return (0);
 		}
-		write(tempfile, line, ft_strlen(line)); //?
+		if (write(tempfile, line, ft_strlen(line)) == -1)
+		{
+			terminate("write failed", -1);
+			free(line);
+			return (-1);
+		}
 		free(line);
 	}
-	return (0);
 }
 
-int	heredoc(char *limiter)
+int	heredoc(char *argv_0, char *limiter)
 {
 	int		upstream;
 	int		tempfile;
@@ -101,18 +113,12 @@ int	heredoc(char *limiter)
 	}
 	unlink(tempfile_path);
 	free(tempfile_path);
-	// tempfile: open
-	if (fn() == -1)
+	if (process_heredoc(argv_0, tempfile, limiter) == -1)
 	{
+		close(tempfile);
 		close(upstream);
-		return (-1);
+		exit(EXIT_FAILURE);
 	}
-	return (0);
+	close(tempfile);
+	return (upstream);
 }
-
-/*
-HEREDOC PROMPT: (PTS2)
-	- The prompt itself is not part of the heredoc content. It is just a visual indicator.
-	- The heredoc prompt (e.g., >) is displayed by the shell to indicate that it is waiting
-	  for heredoc input.
-*/

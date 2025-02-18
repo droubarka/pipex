@@ -12,105 +12,125 @@
 
 #include "pipex.h"
 
-static void	execute_absolute_path(t_child *child, char **argv)
+static int	execute_absolute_path(t_child *child, char **argv)
 {
 	free_array(child->path);
+	child->path = NULL;
 	if (execve(argv[0], argv, child->envp) == -1)
 	{
 		terminate(argv[0], -1);
-		free_array(argv);
-		close_stdio(child->stdio);
-		exit(126);
+		return (126);
 	}
+	return (-1);
 }
 
-static void	handle_exit(t_child *child, char **argv, char *addr)
+static int	check_access(char **filepath, char **resolved_path)
 {
-	free(addr);
-	free_array(argv);
-	free_array(child->path);
-	close_stdio(child->stdio);
-	terminate("malloc failed", EXIT_FAILURE);
+	if (access(*filepath, F_OK) == 0)
+	{
+		if (access(*filepath, X_OK) == 0)
+		{
+			if (*resolved_path != NULL)
+			{
+				free(*resolved_path);
+			}
+			*resolved_path = *filepath;
+			return (0);
+		}
+		if (*resolved_path == NULL)
+		{
+			*resolved_path = *filepath;
+			*filepath = NULL;
+		}
+	}
+	if (*filepath != NULL)
+	{
+		free(*filepath);
+		filepath = NULL;
+	}
+	return (-1);
 }
 
-static void	get_pathname(t_child *child, char **argv, char **pathname)
+static int	get_pathname(t_child *child, char **argv, char **pathname)
 {
 	char	*temp;
 	size_t	idx;
 
 	idx = 0;
+	*pathname = NULL;
 	while (child->path[idx])
 	{
 		temp = pathjoin(child->path[idx++], argv[0]);
 		if (temp == NULL)
-			handle_exit(child, argv, *pathname);
-		if (access(temp, F_OK) == 0)
 		{
-			if (access(temp, X_OK) == 0)
-			{
-				(free(*pathname), *pathname = temp);
-				return ;
-			}
-			if (*pathname == NULL)
-			{
-				*pathname = ft_strdup(temp);
-				if (*pathname == NULL)
-					handle_exit(child, argv, temp);
-			}
+			terminate("malloc failed", -1);
+			if (pathname != NULL)
+				free(pathname);
+			return (-1);
 		}
-		free(temp);
+		if (check_access(&temp, pathname) != -1)
+		{
+			return (0);
+		}
 	}
+	return (0);
 }
 
-static void	execute_from_path(t_child *child, char **argv)
+static int	execute_from_path(t_child *child, char **argv)
 {
 	char	*pathname;
 	char	*buff;
 
-	pathname = NULL;
-	get_pathname(child, argv, &pathname);
+	if (get_pathname(child, argv, &pathname) == -1)
+		return (EXIT_FAILURE);
 	free_array(child->path);
+	child->path = NULL;
 	if (pathname == NULL)
 	{
 		buff = ft_strjoin(argv[0], ": command not found\n");
-		free_array(argv);
-		close_stdio(child->stdio);
 		if (buff == NULL)
-			terminate("malloc failed", EXIT_FAILURE);
+		{
+			terminate("malloc failed", -1);
+			return (EXIT_FAILURE);
+		}
 		write(2, buff, ft_strlen(buff));
 		free(buff);
-		exit(127);
+		return (127);
 	}
 	if (execve(pathname, argv, child->envp) == -1)
 	{
 		terminate(pathname, -1);
 		free(pathname);
-		free_array(argv);
-		close_stdio(child->stdio);
-		exit(126);
+		return (126);
 	}
+	return (0);
 }
 
-void	execute_child(t_child *child)
+int	execute_child(t_child *child)
 {
 	char	**argv;
+	int		exit_status;
 
 	argv = ft_split(child->cmdline, ' ');
 	if (argv == NULL)
 	{
-		free_array(child->path);
-		close_stdio(child->stdio);
-		terminate("malloc failed", EXIT_FAILURE);
+		terminate("malloc failed", -1);
+		return (EXIT_FAILURE);
 	}
 	if (argv[0] == NULL)
 	{
-		free_array(argv);
-		free_array(child->path);
-		close_stdio(child->stdio);
 		write(2, ": command not found\n", 20);
-		exit(127);
+		free_array(argv);
+		return (127);
 	}
-	if (ft_strchr(argv[0], '/') == NULL)
-		execute_from_path(child, argv);
-	execute_absolute_path(child, argv);
+	if (ft_strchr(argv[0], '/') != NULL)
+	{
+		exit_status = execute_absolute_path(child, argv);
+	}
+	else
+	{
+		exit_status = execute_from_path(child, argv);
+	}
+	free_array(argv);
+	return (exit_status);
 }

@@ -41,8 +41,13 @@ char	*pathjoin(char *path, char *filename)
 
 void	close_stdio(int *stdio)
 {
-	close(stdio[0]);
-	close(stdio[1]);
+	if (stdio[0] != -1)
+		close(stdio[0]);
+	if (stdio[1] != -1)
+		close(stdio[1]);
+
+	stdio[0] = -1;
+	stdio[1] = -1;
 }
 
 void	free_array(char **array)
@@ -58,7 +63,7 @@ void	free_array(char **array)
 	free(root);
 }
 
-void	terminate(char *s, int status)
+int	terminate(char *s, int status)
 {
 	static char	argv_0[PATH_MAX];
 	char		buff[PATH_MAX + 128];
@@ -66,7 +71,7 @@ void	terminate(char *s, int status)
 	if (status == -2)
 	{
 		ft_strlcpy(argv_0, s, PATH_MAX);
-		return ;
+		return (-2);
 	}
 	if (s != NULL)
 	{
@@ -78,4 +83,5 @@ void	terminate(char *s, int status)
 	}
 	if (-1 < status)
 		exit(status);
+	return (status);
 }

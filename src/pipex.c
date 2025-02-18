@@ -14,11 +14,16 @@
 
 static char	**get_path(char **envp)
 {
-	while (*envp)
+	if (envp != NULL)
 	{
-		if (!ft_strncmp(*envp, "PATH=", 5))
-			return (ft_split(*envp + 5, ':'));
-		envp++;
+		while (*envp)
+		{
+			if (!ft_strncmp(*envp, "PATH=", 5))
+			{
+				return (ft_split(*envp + 5, ':'));
+			}
+			envp++;
+		}
 	}
 	return (ft_split("", ':'));
 }
@@ -39,31 +44,31 @@ static int	wait_childs(pid_t last_child)
 		{
 			if (WIFEXITED(stat_loc))
 				exit_status = WEXITSTATUS(stat_loc);
-			else
-				exit_status = WTERMSIG(stat_loc);
+			else if (WIFSIGNALED(stat_loc))
+				exit_status = WCOREDUMP(stat_loc) << 7 | WTERMSIG(stat_loc); //?
 		}
 	}
-//	if (last_child == -1)
-//		return (-1);
-//	else if (last_child == 0)
-//		return (-1);
+	if (last_child == -1)
+		exit_status = 254;
 	return (exit_status);
 }
 
-static int	init_childs(t_child *child, int nchilds, char **av, int last_stdin)
+//static pid_t	init_childs(t_child *child, int nchilds, char **av, int last_stdin)
+
+static pid_t	init_childs(t_child *child, int nchilds, char **av, int last_stdin)
 {
 	int		xchild;
 	pid_t	last_child;
 
 	xchild = 0;
-	last_child = 0;
 	while (xchild < nchilds)
 	{
 		child->rank = xchild;
 		child->cmdline = av[xchild + 1];
+		last_child = -2;
 		if (init_stdio(child, nchilds, &last_stdin) == -1)
 			break ;
-		last_child = setup_child(child, last_stdin);
+		last_child = create_child(child, last_stdin);
 		if (last_child == -1)
 		{
 			close_stdio(child->stdio);
@@ -75,7 +80,7 @@ static int	init_childs(t_child *child, int nchilds, char **av, int last_stdin)
 	if (last_stdin != -1)
 		close(last_stdin);
 	free_array(child->path);
-	return (wait_childs(last_child));
+	return (last_child);
 }
 
 int	pipex(int ac, char **av, char **envp, int upstream)
@@ -83,14 +88,24 @@ int	pipex(int ac, char **av, char **envp, int upstream)
 	int		total_childs;
 	int		exit_status;
 	t_child	child;
+	pid_t	last_child;
 
 	child.path = get_path(envp);
 	if (child.path == NULL)
+	{
+		terminate("malloc failed", -1);
 		return (EXIT_FAILURE);
+	}
 	child.envp = envp;
 	child.iofiles[0] = av[0];
 	child.iofiles[1] = av[ac - 1];
+	child.oflag = O_WRONLY | O_CREAT;
+	if (upstream != -1)
+		child.oflag |= O_APPEND;
+	else
+		child.oflag |= O_TRUNC;
 	total_childs = ac - 2;
-	exit_status = init_childs(&child, total_childs, av, upstream);
+	last_child = init_childs(&child, total_childs, av, upstream);
+	exit_status = wait_childs(last_child);
 	return (exit_status);
 }

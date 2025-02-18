@@ -24,28 +24,40 @@
 # include "../libft/libft.h"
 # include "../get_next_line/get_next_line.h"
 
+# ifndef ARG_MAX
+# define ARG_MAX (1 << 21)
+# endif
+
+# ifndef WARN_MAX
+# define WARN_MAX (PATH_MAX + ARG_MAX + 128)
+# endif
+
+//typedef struct s_other {
+//
+//};
+
 typedef struct s_child {
 	int		rank;
 	int		stdio[2];
-	char	**path;
-	char	**envp;
 	char	*cmdline;
+	char	**envp;
+	char	**path;
 
 	char	*iofiles[2];
-
+	int		oflag;
 }	t_child;
 
 int		pipex(int ac, char **av, char **envp, int upstream);
-int		init_stdio(t_child *child, int n_childs, int *upstream);
-pid_t	setup_child(t_child *child, int last_stdin);
-void	execute_child(t_child *child);
+int		init_stdio(t_child *child, int nchilds, int *upstream);
+pid_t	create_child(t_child *child, int last_stdin);
+int		execute_child(t_child *child);
 
 void	xsleep(unsigned int seconds);
 char	*pathjoin(char *path, char *filename);
 void	close_stdio(int *stdio);
 void	free_array(char **array);
-void	terminate(char *s, int status);
+int		terminate(char *s, int status);
 
-int		heredoc(char *limiter);
+int		heredoc(char *argv_0, char *limiter);
 
 #endif
