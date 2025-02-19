@@ -12,6 +12,20 @@
 
 #include "pipex.h"
 
+void	dprint(int fd, unsigned int argN, ...)
+{
+	va_list	ap;
+	char	*s;
+
+	va_start(ap, argN);
+	while (argN--)
+	{
+		s = va_arg(ap, char *);
+		write(fd, s, strlen(s));
+	}
+	va_end(ap);
+}
+
 void	xsleep(unsigned int seconds)
 {
 	int	counter;

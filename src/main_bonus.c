@@ -21,6 +21,7 @@ int	main(int argc, char **argv, char **envp)
 	heredoc_flag = 0;
 	if (1 < argc)
 		heredoc_flag = !ft_strncmp(argv[1], "here_doc", 9);
+
 	if (argc < 5 || (heredoc_flag && argc < 6))
 	{
 		errno = EINVAL;

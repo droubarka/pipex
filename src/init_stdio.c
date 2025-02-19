@@ -32,12 +32,16 @@ int	init_stdio(t_child *child, int nchilds, int *upstream)
 		if (*upstream == -1)
 			terminate(child->iofiles[0], -1);
 	}
+
+
 	if (child->rank == nchilds - 1)
 	{
 		if (init_stdio_final(child, upstream) == -1)
 			terminate(child->iofiles[1], -1);
 		return (0);
 	}
+
+
 	if (pipe(pipefd) == -1)
 	{
 		terminate("pipe error", -1);

@@ -12,61 +12,72 @@
 
 #include "pipex.h"
 
-static char	*make_tempfile(char *prefix)
+static pid_t	create_zombie(void)
 {
-	char	*pid;
-	char	*tempfile;
+	pid_t	pid;
 
-	pid = ft_itoa((int) getpid());
-	tempfile = ft_strjoin(prefix, pid);
-	if (pid != NULL)
-		free(pid);
-	return (tempfile);
+	pid = fork();
+	if (pid == 0)
+	{
+		exit(EXIT_SUCCESS);
+	}
+	return (pid);
 }
 
-static int	create_tempfile(char **tempfile_path)
+static char	*make_tempfile(char *prefix)
 {
-	int		tempfile;
+	char	*tempfile;
+	char	*uniq_pid;
+	pid_t	zombie_pid;
 
-	*tempfile_path = make_tempfile("/tmp/xsh-thd-");
-	if (*tempfile_path == NULL)
-		terminate("malloc failed", EXIT_FAILURE);
-	tempfile = open(*tempfile_path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-	if (tempfile == -1)
+	zombie_pid = create_zombie();
+	if (zombie_pid == -1)
 	{
-		terminate(*tempfile_path, -1);
-		free(*tempfile_path);
-		*tempfile_path = make_tempfile(".xsh-thd-");
-		if (*tempfile_path == NULL)
-			terminate("malloc failed", EXIT_FAILURE);
-		tempfile = open(*tempfile_path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-		if (tempfile == -1)
-		{
-			terminate(*tempfile_path, -1);
-			free(*tempfile_path);
-			exit(EXIT_FAILURE);
-		}
+		terminate("fork", -1);
+		return (NULL);
+	}
+	uniq_pid = ft_itoa((int) zombie_pid);
+	tempfile = ft_strjoin(prefix, uniq_pid);
+	if (uniq_pid == NULL || tempfile == NULL)
+	{
+		terminate("malloc", -1);
+		waitpid(zombie_pid, NULL, 0);
+	}
+	if (uniq_pid != NULL)
+	{
+		free(uniq_pid);
 	}
 	return (tempfile);
 }
 
+static int	create_tempfile(char **filepath)
+{
+	int		tempfile;
+
+	*filepath = make_tempfile("/tmp/xsh-thd-");
+	if (*filepath != NULL)
+	{
+		tempfile = open(*filepath, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+		if (tempfile != -1)
+		{
+			return (tempfile);
+		}
+		terminate(*filepath, -1);
+		free(*filepath);
+	}
+	return (-1);
+}
+
 static int	raise_warning(char *argv_0, char *limiter)
 {
-	char	warning[WARN_MAX];
 	char	*warn_msg;
 
 	warn_msg = ": warning: here-document delimited by end-of-file (wanted `";
-	*warning = '\0';
-	ft_strlcat(warning, "\n", WARN_MAX);
-	ft_strlcat(warning, argv_0, WARN_MAX);
-	ft_strlcat(warning, warn_msg, WARN_MAX);
-	ft_strlcat(warning, limiter, WARN_MAX);
-	ft_strlcat(warning, "')\n", WARN_MAX);
-	write(STDERR_FILENO, warning, ft_strlen(warning));
+	dprint(STDERR_FILENO, 5, "\n", argv_0, warn_msg, limiter, "')\n");
 	return (0);
 }
 
-static int	process_heredoc(char *argv_0, int tempfile, char *limiter)
+static int	process_heredoc(int tempfile, char *limiter)
 {
 	size_t	lmtr_len;
 	char	*line;
@@ -77,9 +88,9 @@ static int	process_heredoc(char *argv_0, int tempfile, char *limiter)
 		write(STDERR_FILENO, "> ", 2);
 		line = get_next_line(STDIN_FILENO);
 		if (line == NULL && errno == ENOMEM)
-			return (terminate("malloc failed", -1));
+			return (terminate("malloc", -1));
 		if (line == NULL)
-			return (raise_warning(argv_0, limiter));
+			return (raise_warning(limiter));
 		if (!ft_strncmp(line, limiter, lmtr_len) && line[lmtr_len] == '\n')
 		{
 			free(line);
@@ -87,7 +98,7 @@ static int	process_heredoc(char *argv_0, int tempfile, char *limiter)
 		}
 		if (write(tempfile, line, ft_strlen(line)) == -1)
 		{
-			terminate("write failed", -1);
+			terminate("write", -1);
 			free(line);
 			return (-1);
 		}
@@ -95,30 +106,33 @@ static int	process_heredoc(char *argv_0, int tempfile, char *limiter)
 	}
 }
 
-int	heredoc(char *argv_0, char *limiter)
+int	heredoc(char *limiter)
 {
 	int		upstream;
 	int		tempfile;
-	char	*tempfile_path;
+	char	*filepath;
 
-	tempfile = create_tempfile(&tempfile_path);
-	upstream = open(tempfile_path, O_RDONLY);
-	if (upstream == -1)
+	tempfile = create_tempfile(&filepath);
+	if (tempfile != -1)
 	{
-		terminate(tempfile_path, -1);
-		unlink(tempfile_path);
-		free(tempfile_path);
+		upstream = open(filepath, O_RDONLY);
+		if (upstream == -1)
+		{
+			terminate(filepath, -1);
+		}
+		unlink(filepath);
+		free(filepath);
+		if (upstream != -1)
+		{
+			if (process_heredoc(tempfile, limiter) != -1)
+			{
+				close(tempfile);
+				return (upstream);
+			}
+			close(upstream);
+		}
 		close(tempfile);
-		exit(EXIT_FAILURE);
 	}
-	unlink(tempfile_path);
-	free(tempfile_path);
-	if (process_heredoc(argv_0, tempfile, limiter) == -1)
-	{
-		close(tempfile);
-		close(upstream);
-		exit(EXIT_FAILURE);
-	}
-	close(tempfile);
-	return (upstream);
+	//? waitpid(zombie_pid, NULL, 0)
+	return (-1);
 }
