@@ -12,10 +12,10 @@
 
 #include "pipex.h"
 
-void	dprint(int fd, unsigned int argN, ...)
+void	dprints(int fd, unsigned int argN, ...)
 {
 	va_list	ap;
-	char	*s;
+	char	buffer[1024];
 
 	va_start(ap, argN);
 	while (argN--)

@@ -39,7 +39,7 @@ static int	setup_stdio(int *stdio)
 	{
 		if (stdio[0] != -1)
 		{
-			terminate("dup2 failed", -1);
+			terminate("dup2", -1);
 		}
 		return (-1);
 	}
@@ -47,11 +47,11 @@ static int	setup_stdio(int *stdio)
 	{
 		if (stdio[1] != -1)
 		{
-			terminate("dup2 failed", -1);
+			terminate("dup2", -1);
 		}
 		if (close(STDIN_FILENO) == -1)
 		{
-			terminate("close failed", -1);
+			terminate("close", -1);
 		}
 		return (-1);
 	}
@@ -61,28 +61,26 @@ static int	setup_stdio(int *stdio)
 	return (0);
 }
 
-pid_t	create_child(t_child *child, int last_stdin)
+pid_t	create_child(t_pipeline *pipeline, int last_stdin)
 {
+	t_child	*child;
 	pid_t	pid;
 	int		exit_status;
 
 	pid = retry_fork(4);
-	if (pid == -1)
-	{
-		return (-1);
-	}
 	if (pid == 0)
 	{
+		child = &pipeline->current_child;
 		if (last_stdin != -1 && close(last_stdin) == -1)
 		{
-			terminate("close failed", -1);
+			terminate("close", -1);
 		}
 		exit_status = EXIT_FAILURE;
 		if (setup_stdio(child->stdio) != -1)
 		{
 			exit_status = execute_child(child);
 		}
-		free_array(child->path);
+		free_array(pipeline->splited_path);
 		close_stdio(child->stdio);
 		exit(exit_status);
 	}

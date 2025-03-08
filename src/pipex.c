@@ -45,7 +45,7 @@ static int	wait_childs(pid_t last_child)
 			if (WIFEXITED(stat_loc))
 				exit_status = WEXITSTATUS(stat_loc);
 			else if (WIFSIGNALED(stat_loc))
-				exit_status = WCOREDUMP(stat_loc) << 7 | WTERMSIG(stat_loc); //?
+				exit_status = 1 << 7 | WTERMSIG(stat_loc);
 		}
 	}
 	if (last_child == -1)
@@ -53,59 +53,59 @@ static int	wait_childs(pid_t last_child)
 	return (exit_status);
 }
 
-//static pid_t	init_childs(t_child *child, int nchilds, char **av, int last_stdin)
-
-static pid_t	init_childs(t_child *child, int nchilds, char **av, int last_stdin)
+static pid_t	create_childs(t_pipeline *pipeline, int last_stdin)
 {
-	int		xchild;
-	pid_t	last_child;
+	t_child	*child;
+	pid_t	last_child_pid;
 
-	xchild = 0;
-	while (xchild < nchilds)
+	child = &pipeline->current_child;
+	pipeline->current_child_rank = 0;
+	while (pipeline->current_child_rank < pipeline->total_childs)
 	{
-		child->rank = xchild;
-		child->cmdline = av[xchild + 1];
-		last_child = -2;
-		if (init_stdio(child, nchilds, &last_stdin) == -1)
+		last_child_pid = 0;
+		child->cmdline = pipeline->cmdlines[pipeline->current_child_rank];
+		if (init_stdio(pipeline, &last_stdin) == -1)
 			break ;
-		last_child = create_child(child, last_stdin);
-		if (last_child == -1)
+		last_child_pid = create_child(pipeline, last_stdin);
+		if (last_child_pid == -1)
 		{
 			close_stdio(child->stdio);
 			break ;
 		}
 		close_stdio(child->stdio);
-		xchild++;
+		pipeline->current_child_rank++;
 	}
 	if (last_stdin != -1)
 		close(last_stdin);
-	free_array(child->path);
-	return (last_child);
+	free_array(pipeline->splited_path);
+	return (last_child_pid);
 }
 
 int	pipex(int ac, char **av, char **envp, int upstream)
 {
-	int		total_childs;
-	int		exit_status;
-	t_child	child;
-	pid_t	last_child;
+	t_pipeline	pipeline;
+	t_child		child;
+	pid_t		last_child_pid;
+	int			exit_status;
 
-	child.path = get_path(envp);
-	if (child.path == NULL)
+	pipeline.total_childs = ac - 2;
+	child = pipeline.current_child;
+	child.envp = envp;
+	pipeline.splited_path = get_path(envp);
+	pipeline.cmdlines = av + 1;
+	pipeline.iofiles[0] = av[0];
+	pipeline.iofiles[1] = av[ac - 1];
+	pipeline.oflag = O_WRONLY | O_CREAT;
+	if (upstream != -1)
+		pipeline.oflag = O_APPEND;
+	else
+		pipeline.oflag = O_TRUNC;
+	if (pipeline.splited_path == NULL)
 	{
-		terminate("malloc failed", -1);
+		terminate("malloc", -1);
 		return (EXIT_FAILURE);
 	}
-	child.envp = envp;
-	child.iofiles[0] = av[0];
-	child.iofiles[1] = av[ac - 1];
-	child.oflag = O_WRONLY | O_CREAT;
-	if (upstream != -1)
-		child.oflag |= O_APPEND;
-	else
-		child.oflag |= O_TRUNC;
-	total_childs = ac - 2;
-	last_child = init_childs(&child, total_childs, av, upstream);
-	exit_status = wait_childs(last_child);
+	last_child_pid = create_childs(&pipeline, upstream);
+	exit_status = wait_childs(last_child_pid);
 	return (exit_status);
 }

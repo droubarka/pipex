@@ -12,39 +12,42 @@
 
 #include "pipex.h"
 
-static int	init_stdio_final(t_child *child, int *upstream)
+static int	init_stdio_lastone(t_pipeline *pipeline, int *upstream)
 {
+	t_child	*child;
+
+	child = &pipeline->current_child;
 	child->stdio[0] = *upstream;
 	*upstream = -1;
-	child->stdio[1] = open(child->iofiles[1], child->oflag, 0644);
+	child->stdio[1] = open(pipeline->iofiles[1], pipeline->oflag, 0644);
 	if (child->stdio[1] == -1)
+	{
 		return (-1);
+	}
 	return (0);
 }
 
-int	init_stdio(t_child *child, int nchilds, int *upstream)
+int	init_stdio(t_pipeline *pipeline, int *upstream)
 {
-	int	pipefd[2];
+	t_child	*child;
+	int		pipefd[2];
 
-	if (child->rank == 0 && *upstream == -1)
+	child = &pipeline->current_child;
+	if (pipeline->current_child_rank == 0 && *upstream == -1)
 	{
-		*upstream = open(child->iofiles[0], O_RDONLY);
+		*upstream = open(pipeline->iofiles[0], O_RDONLY);
 		if (*upstream == -1)
-			terminate(child->iofiles[0], -1);
+			terminate(pipeline->iofiles[0], -1);
 	}
-
-
-	if (child->rank == nchilds - 1)
+	if (pipeline->current_child_rank == pipeline->total_childs - 1)
 	{
-		if (init_stdio_final(child, upstream) == -1)
-			terminate(child->iofiles[1], -1);
+		if (init_stdio_lastone(pipeline, upstream) == -1)
+			terminate(pipeline->iofiles[1], -1);
 		return (0);
 	}
-
-
 	if (pipe(pipefd) == -1)
 	{
-		terminate("pipe error", -1);
+		terminate("pipe", -1);
 		return (-1);
 	}
 	child->stdio[0] = *upstream;
