@@ -12,125 +12,107 @@
 
 #include "pipex.h"
 
-static int	execute_absolute_path(t_child *child, char **argv)
+static int	execute_cmd(t_execute *execute)
 {
-	free_array(child->path);
-	child->path = NULL;
-	if (execve(argv[0], argv, child->envp) == -1)
+	if (execve(execute->pathname, execute->argv, execute->envp) == -1)
 	{
-		terminate(argv[0], -1);
+		terminate(execute->pathname, -1);
 		return (126);
 	}
 	return (-1);
 }
 
-static int	check_access(char **filepath, char **resolved_path)
-{
-	if (access(*filepath, F_OK) == 0)
-	{
-		if (access(*filepath, X_OK) == 0)
-		{
-			if (*resolved_path != NULL)
-			{
-				free(*resolved_path);
-			}
-			*resolved_path = *filepath;
-			return (0);
-		}
-		if (*resolved_path == NULL)
-		{
-			*resolved_path = *filepath;
-			*filepath = NULL;
-		}
-	}
-	if (*filepath != NULL)
-	{
-		free(*filepath);
-		filepath = NULL;
-	}
-	return (-1);
-}
-
-static int	get_pathname(t_child *child, char **argv, char **pathname)
-{
-	char	*temp;
-	size_t	idx;
-
-	idx = 0;
-	*pathname = NULL;
-	while (child->path[idx])
-	{
-		temp = pathjoin(child->path[idx++], argv[0]);
-		if (temp == NULL)
-		{
-			terminate("malloc failed", -1);
-			if (pathname != NULL)
-				free(pathname);
-			return (-1);
-		}
-		if (check_access(&temp, pathname) != -1)
-		{
-			return (0);
-		}
-	}
-	return (0);
-}
-
-static int	execute_from_path(t_child *child, char **argv)
+static char	*get_pathname(char **path, char *cmdname)
 {
 	char	*pathname;
-	char	*buff;
+	char	*temp;
 
-	if (get_pathname(child, argv, &pathname) == -1)
-		return (EXIT_FAILURE);
-	free_array(child->path);
-	child->path = NULL;
-	if (pathname == NULL)
+	pathname = NULL;
+	while (*path)
 	{
-		buff = ft_strjoin(argv[0], ": command not found\n");
-		if (buff == NULL)
+		temp = pathjoin(*path, cmdname);
+		if (temp == NULL)
 		{
-			terminate("malloc failed", -1);
-			return (EXIT_FAILURE);
+			terminate("malloc", -1);
+			return (free(pathname), NULL);
 		}
-		write(2, buff, ft_strlen(buff));
-		free(buff);
-		return (127);
+		if (access(temp, F_OK) == 0)
+		{
+			if (access(temp, X_OK) == 0)
+				return (free(pathname), temp);
+			if (pathname == NULL)
+			{
+				pathname = temp;
+				temp = NULL;
+			}
+		}
+		free(temp);
+		path++;
 	}
-	if (execve(pathname, argv, child->envp) == -1)
-	{
-		terminate(pathname, -1);
-		free(pathname);
-		return (126);
-	}
-	return (0);
+	return (pathname);
 }
 
-int	execute_child(t_pipeline *pipeline)
+static int	execute2(t_pipeline *pipeline, t_execute *execute)
 {
-	t_child	*child;
-
-	child = &pipeline->current_child;
-	argv = ft_split(child->cmdline, ' ');
-	if (argv == NULL)
+	execute->pathname = get_pathname(pipeline->splited_path, execute->argv[0]);
+	if (execute->pathname == NULL && errno == ENOMEM)
 	{
 		terminate("malloc", -1);
 		return (EXIT_FAILURE);
 	}
-	if (argv[0] == NULL)
+	if (execute->pathname == NULL)
 	{
-		write(2, ": command not found\n", 20);
-		free_array(argv);
+		dprints(2, 2, execute->argv[0], ": command not found\n");
 		return (127);
 	}
-	if (ft_strchr(argv[0], '/') != NULL)
+	free(pipeline->splited_path);
+	pipeline->splited_path = NULL;
+	if (execute_cmd(execute) != -1)
 	{
-		exit_status = execute_absolute_path(child, argv);
+		free(execute->pathname);
+		return (126);
+	}
+	return (EXIT_SUCCESS);
+}
+
+static int	setup_execute(t_child *child, t_execute *execute)
+{
+	execute->argv = ft_split(child->cmdline, ' ');
+	if (execute->argv == NULL)
+	{
+		terminate("malloc", -1);
+		return (EXIT_FAILURE);
+	}
+	if (execute->argv[0] == NULL)
+	{
+		write(2, ": command not found\n", 20);
+		return (127);
+	}
+	execute->envp = child->envp;
+	return (EXIT_SUCCESS);
+}
+
+int	execute_child(t_pipeline *pipeline)
+{
+	t_execute	execute;
+	int			exit_status;
+
+	exit_status = setup_execute(&pipeline->current_child, &execute);
+	if (exit_status != EXIT_SUCCESS)
+	{
+		return (exit_status);
+	}
+	if (ft_strchr(execute.argv[0], '/') != NULL)
+	{
+		free(pipeline->splited_path);
+		pipeline->splited_path = NULL;
+		execute.pathname = execute.argv[0];
+		exit_status = execute_cmd(&execute);
 	}
 	else
 	{
-		exit_status = execute_from_path(child, argv);
+		exit_status = execute2(pipeline, &execute);
 	}
-	free_array(argv);
+	free_array(execute.argv);
 	return (exit_status);
 }

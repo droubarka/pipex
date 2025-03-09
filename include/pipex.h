@@ -25,7 +25,7 @@
 
 typedef struct s_pipeline	t_pipeline;
 typedef struct s_child		t_child;
-typedef struct s_execute	t_exec;
+typedef struct s_execute	t_execute;
 
 struct s_execute {
 	char	*pathname;
@@ -55,10 +55,12 @@ int	init_stdio(t_pipeline *pipeline, int *upstream);
 
 pid_t	create_child(t_pipeline *pipeline, int last_stdin);
 
+int	execute_child(t_pipeline *pipeline);
 int	terminate(const char *s, int status);
 
 //?
 char	*get_next_line(int fd);
 int		pipex(int ac, char **av, char **envp, int upstream);
+int		close_stdio(int *stdio);
 
 #endif

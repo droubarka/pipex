@@ -1,6 +1,0 @@
-Makefile
-execute_child.c
-main.c
-utils.c
-terminate.c
-utils/*
