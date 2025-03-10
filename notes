@@ -1,16 +1,3 @@
-exit(cant-fork, cant-pipe);
-errno -l ENOMEM
-re-check exit-status
->> in a file
-while -2 for failure of piping ???
-rename free_array()
-recheck terminate()
-refilter fn(global->specific);
-remove getpid() function - ITS FORBIDEN -
-race of childs (zombie-child)
-errno not updated
-dprints: write all string at ones, malloc errors
-rewrite terminate() pls
-rewrite itoa() pls
-set dprints buffer (max)
-update itoa
+LASTCHILDPID
+WCOREDUMP
+ERRMSGS
