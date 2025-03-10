@@ -13,6 +13,8 @@
 #ifndef UTILS_H
 # define UTILS_H
 
+# include "get_next_line.h"
+
 # include <limits.h>
 # include <stdarg.h>
 # include <stdlib.h>

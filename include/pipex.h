@@ -21,7 +21,13 @@
 # include <stdio.h>
 # include <sys/wait.h>
 
-# define TERMINATE_BUFFER_SIZE PATH_MAX + 128
+# ifndef PATH_MAX
+# define PATH_MAX (1 << 12)
+# endif
+
+# ifndef TERMINATE_BUFFER_SIZE
+# define TERMINATE_BUFFER_SIZE (PATH_MAX + 64)
+# endif
 
 typedef struct s_pipeline	t_pipeline;
 typedef struct s_child		t_child;
@@ -49,15 +55,13 @@ struct s_pipeline {
 	int		oflag;
 };
 
+int	close_stdio(int *stdio);
+int	execute_child(t_pipeline *pipeline);
 int	heredoc(const char *argv_0, const char *delimiter);
-
-int	pipex(int ac, char **av, char **envp, int upstream);
 int	init_stdio(t_pipeline *pipeline, int *upstream);
+int	pipex(int ac, char **av, char **envp, int upstream);
+int	terminate(const char *s, int status);
 
 pid_t	create_child(t_pipeline *pipeline, int last_stdin);
-
-int	execute_child(t_pipeline *pipeline);
-int	close_stdio(int *stdio);
-int	terminate(const char *s, int status);
 
 #endif

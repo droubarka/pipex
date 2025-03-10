@@ -29,20 +29,24 @@ UTILS_FILES = \
 	$(UTILS_DIR)/create_zombie.c \
 	$(UTILS_DIR)/dprints.c \
 	$(UTILS_DIR)/free_array.c \
-	$(UTLIS_DIR)/ft_itoa.c \
-	$(UTLIS_DIR)/ft_split.c \
-	$(UTLIS_DIR)/ft_strjoin.c \
+	$(UTILS_DIR)/ft_itoa.c \
+	$(UTILS_DIR)/ft_split.c \
+	$(UTILS_DIR)/ft_strchr.c \
+	$(UTILS_DIR)/ft_strjoin.c \
 	$(UTILS_DIR)/ft_strlcat.c \
 	$(UTILS_DIR)/ft_strlen.c \
-	$(UTILS_DIR)/ft_strnmp.c \
+	$(UTILS_DIR)/ft_strncmp.c \
+	$(UTILS_DIR)/get_next_line.c \
+	$(UTILS_DIR)/get_next_line_utils.c \
 	$(UTILS_DIR)/pathjoin.c \
 	$(UTILS_DIR)/xsleep.c
 
 SRC_FILES = \
-	$(SRC_DIR)/pipex.c \
-	$(SRC_DIR)/init_stdio.c \
+	$(SRC_DIR)/close_stdio.c \
 	$(SRC_DIR)/create_child.c \
 	$(SRC_DIR)/execute_child.c \
+	$(SRC_DIR)/init_stdio.c \
+	$(SRC_DIR)/pipex.c \
 	$(SRC_DIR)/terminate.c \
 	$(UTILS_FILES)
 
@@ -57,15 +61,15 @@ all: $(NAME_MANDATORY)
 bonus: $(NAME_BONUS)
 
 $(NAME_MANDATORY): $(MANDATORY_OBJS)
-	
+	$(CC) $(CFLAGS) -o $@ $(MANDATORY_OBJS)
 
 $(NAME_BONUS): $(BONUS_OBJS)
-	
+	$(CC) $(CFLAGS) -o $@ $(BONUS_OBJS)
 
 clean:
 	@rm -rfv $(MANDATORY_OBJS) $(BONUS_OBJS)
 
 fclean: clean
-	@rm -rfv $(NAME)
+	@rm -rfv $(NAME) $(NAME_MANDATORY) $(NAME_BONUS)
 
-re: fclean re
+re: fclean all
