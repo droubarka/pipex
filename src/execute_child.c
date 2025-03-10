@@ -52,7 +52,7 @@ static char	*get_pathname(char **path, char *cmdname)
 	return (pathname);
 }
 
-static int	execute2(t_pipeline *pipeline, t_execute *execute)
+static int	find_and_execute(t_pipeline *pipeline, t_execute *execute)
 {
 	execute->pathname = get_pathname(pipeline->splited_path, execute->argv[0]);
 	if (execute->pathname == NULL && errno == ENOMEM)
@@ -111,7 +111,7 @@ int	execute_child(t_pipeline *pipeline)
 	}
 	else
 	{
-		exit_status = execute2(pipeline, &execute);
+		exit_status = find_and_execute(pipeline, &execute);
 	}
 	free_array(execute.argv);
 	return (exit_status);

@@ -30,6 +30,7 @@ UTILS_FILES = \
 	$(UTILS_DIR)/dprints.c \
 	$(UTILS_DIR)/free_array.c \
 	$(UTLIS_DIR)/ft_itoa.c \
+	$(UTLIS_DIR)/ft_split.c \
 	$(UTLIS_DIR)/ft_strjoin.c \
 	$(UTILS_DIR)/ft_strlcat.c \
 	$(UTILS_DIR)/ft_strlen.c \

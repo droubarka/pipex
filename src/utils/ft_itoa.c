@@ -12,12 +12,12 @@
 
 #include "utils.h"
 
-static int	_abs(int n)
+static int	ft_abs(int n)
 {
 	return (-n * (n < 0) + n * (0 < n));
 }
 
-static int	_get_digits_size(int n)
+static int	countdigits(int n)
 {
 	int	size;
 
@@ -30,12 +30,12 @@ static int	_get_digits_size(int n)
 	return (size);
 }
 
-static char	*_alloc_a(int n, int size)
+static char	*alloc_a(int n, int size)
 {
 	int		idx;
 	char	*a;
 
-	a = (char *) malloc(sizeof(char) * size);
+	a = malloc(sizeof(char) * size);
 	if (a != NULL)
 	{
 		idx = size - 2;
@@ -49,7 +49,7 @@ static char	*_alloc_a(int n, int size)
 		}
 		while (n)
 		{
-			a[idx--] = (char)(_abs(n % 10) + '0');
+			a[idx--] = (char)(ft_abs(n % 10) + '0');
 			n /= 10;
 		}
 		a[size - 1] = '\0';
@@ -66,6 +66,6 @@ char	*ft_itoa(int n)
 	{
 		size += 1;
 	}
-	size += _get_digits_size(n);
-	return (_alloc_a(n, size));
+	size += countdigits(n);
+	return (alloc_a(n, size));
 }

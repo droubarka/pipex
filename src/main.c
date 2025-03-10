@@ -20,7 +20,7 @@ int	main(int argc, char **argv, char **envp)
 	{
 		errno = EINVAL;
 		perror(argv[0]);
-		exit(EXIT_FAILURE);
+		return (EXIT_FAILURE);
 	}
 	terminate(argv[0], -2);
 	exit_status = pipex(argc - 1, argv + 1, envp, -1);

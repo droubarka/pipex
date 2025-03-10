@@ -1,24 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils.c                                            :+:      :+:    :+:   */
+/*   ft_strchr.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mait-oub <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/31 00:00:56 by mait-oub          #+#    #+#             */
-/*   Updated: 2025/01/31 00:00:57 by mait-oub         ###   ########.fr       */
+/*   Created: 2024/10/23 22:23:29 by mait-oub          #+#    #+#             */
+/*   Updated: 2024/10/23 22:23:31 by mait-oub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "pipex.h"
+#include "utils.h"
 
-void	close_stdio(int *stdio)
+char	*ft_strchr(const char *s, int c)
 {
-	if (stdio[0] != -1)
-		close(stdio[0]);
-	if (stdio[1] != -1)
-		close(stdio[1]);
-
-	stdio[0] = -1;
-	stdio[1] = -1;
+	while (*s || c == 0)
+	{
+		if (*s == c)
+		{
+			return ((char *) s);
+		}
+		s++;
+	}
+	return (NULL);
 }

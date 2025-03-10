@@ -12,7 +12,7 @@
 
 #include "utils.h"
 
-void	free_array(char **array)
+int	free_array(char **array)
 {
 	char	**root;
 
@@ -25,5 +25,7 @@ void	free_array(char **array)
 			array++;
 		}
 		free(root);
+		return (1);
 	}
+	return (1);
 }

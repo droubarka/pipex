@@ -51,6 +51,7 @@ static int	create_tempfile(char **filepath, pid_t *zombie_pid)
 		}
 		terminate(*filepath, -1);
 		free(*filepath);
+		waitpid(*zombie_pid, NULL, 0);
 	}
 	return (-1);
 }
@@ -117,7 +118,7 @@ int	heredoc(const char *argv_0, const char *delimiter)
 			close(upstream);
 		}
 		close(tempfile);
+		waitpid(zombie_pid, NULL, 0);
 	}
-	waitpid(zombie_pid, NULL, 0);
 	return (-1);
 }

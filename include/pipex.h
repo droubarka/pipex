@@ -50,17 +50,14 @@ struct s_pipeline {
 };
 
 int	heredoc(const char *argv_0, const char *delimiter);
+
 int	pipex(int ac, char **av, char **envp, int upstream);
 int	init_stdio(t_pipeline *pipeline, int *upstream);
 
 pid_t	create_child(t_pipeline *pipeline, int last_stdin);
 
 int	execute_child(t_pipeline *pipeline);
+int	close_stdio(int *stdio);
 int	terminate(const char *s, int status);
-
-//?
-char	*get_next_line(int fd);
-int		pipex(int ac, char **av, char **envp, int upstream);
-int		close_stdio(int *stdio);
 
 #endif

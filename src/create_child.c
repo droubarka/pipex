@@ -78,7 +78,7 @@ pid_t	create_child(t_pipeline *pipeline, int last_stdin)
 		exit_status = EXIT_FAILURE;
 		if (setup_stdio(child->stdio) != -1)
 		{
-			exit_status = execute_child(child);
+			exit_status = execute_child(pipeline);
 		}
 		free_array(pipeline->splited_path);
 		close_stdio(child->stdio);

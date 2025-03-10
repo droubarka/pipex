@@ -84,22 +84,22 @@ static pid_t	create_childs(t_pipeline *pipeline, int last_stdin)
 int	pipex(int ac, char **av, char **envp, int upstream)
 {
 	t_pipeline	pipeline;
-	t_child		child;
+	t_child		*child;
 	pid_t		last_child_pid;
 	int			exit_status;
 
 	pipeline.total_childs = ac - 2;
-	child = pipeline.current_child;
-	child.envp = envp;
+	child = &pipeline.current_child;
+	child->envp = envp;
 	pipeline.splited_path = get_path(envp);
 	pipeline.cmdlines = av + 1;
 	pipeline.iofiles[0] = av[0];
 	pipeline.iofiles[1] = av[ac - 1];
 	pipeline.oflag = O_WRONLY | O_CREAT;
 	if (upstream != -1)
-		pipeline.oflag = O_APPEND;
+		pipeline.oflag |= O_APPEND;
 	else
-		pipeline.oflag = O_TRUNC;
+		pipeline.oflag |= O_TRUNC;
 	if (pipeline.splited_path == NULL)
 	{
 		terminate("malloc", -1);
