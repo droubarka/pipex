@@ -100,6 +100,7 @@ int	execute_child(t_pipeline *pipeline)
 	exit_status = setup_execute(&pipeline->current_child, &execute);
 	if (exit_status != EXIT_SUCCESS)
 	{
+		free_array(execute.argv);
 		return (exit_status);
 	}
 	if (ft_strchr(execute.argv[0], '/') != NULL)
