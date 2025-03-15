@@ -21,7 +21,7 @@ NAME = pipex
 NAME_MANDATORY = .pipex_mandatory
 NAME_BONUS = .pipex_bonus
 
-.PHONY: clean $(OBJ_DIR)
+.PHONY: clean X
 
 UTILS_DIR = $(SRC_DIR)/utils
 UTILS_FILES = \
@@ -55,7 +55,7 @@ INC_FILES = \
 	$(INC_DIR)/utils.h
 
 MANDATORY_SRCS = $(SRC_FILES) $(SRC_DIR)/main.c
-BONUS_SRCS = $(SRC_FILES) $(SRC_DIR)/main_bonus.c $(SRC_DIR)/heredoc.c
+BONUS_SRCS = $(SRC_FILES) $(SRC_DIR)/main_bonus.c $(SRC_DIR)/heredoc_bonus.c
 
 MANDATORY_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(MANDATORY_SRCS))
 BONUS_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(BONUS_SRCS))
@@ -64,20 +64,27 @@ all: $(NAME_MANDATORY)
 
 bonus: $(NAME_BONUS)
 
-$(NAME_MANDATORY): $(INC_FILES) $(MANDATORY_OBJS)
+$(NAME_MANDATORY): $(INC_FILES) $(MANDATORY_OBJS) | MANDATORY
 	$(CC) $(CFLAGS) -o $@ $(MANDATORY_OBJS)
-	ln -sf $(NAME_MANDATORY) $(NAME)
 
-$(NAME_BONUS): $(INC_FILES) $(BONUS_OBJS)
+$(NAME_BONUS): $(INC_FILES) $(BONUS_OBJS) | BONUS
 	$(CC) $(CFLAGS) -o $@ $(BONUS_OBJS)
-	ln -sf $(NAME_BONUS) $(NAME)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+SYMB_LINKS = MANDATORY BONUS
+$(SYMB_LINKS):
+ifeq ($(realpath $(NAME)),)
+	@ln -sf $(NAME_$@) $(NAME)
+endif
+ifneq ($(realpath $(NAME_$@)),$(realpath $(NAME)))
+	@ln -sf $(NAME_$@) $(NAME)
+endif
+
+PREBUILD = $(OBJ_DIR) $(OBJ_DIR)/utils
+$(PREBUILD):
+	@mkdir -v -p $@
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(PREBUILD)
 	$(CC) $(CFLAGS) -c -o $@ $<
-
-$(OBJ_DIR):
-	@mkdir -v -p $(OBJ_DIR)
-	@mkdir -v -p $(OBJ_DIR)/utils
 
 clean:
 	@rm -v -rf $(MANDATORY_OBJS) $(BONUS_OBJS)
