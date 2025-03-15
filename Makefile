@@ -60,7 +60,7 @@ BONUS_SRCS = $(SRC_FILES) $(SRC_DIR)/main_bonus.c $(SRC_DIR)/heredoc.c
 MANDATORY_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(MANDATORY_SRCS))
 BONUS_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(BONUS_SRCS))
 
-all: $(NAME_MANDATORY) $(NAME_BONUS)
+all: $(NAME_MANDATORY)
 
 bonus: $(NAME_BONUS)
 

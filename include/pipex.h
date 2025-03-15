@@ -17,16 +17,16 @@
 
 # include <errno.h>
 # include <fcntl.h>
-# include <limits.h>
+# include <linux/limits.h>
 # include <stdio.h>
 # include <sys/wait.h>
 
 # ifndef PATH_MAX
-# define PATH_MAX (1 << 12)
+#  define PATH_MAX 4096
 # endif
 
 # ifndef TERMINATE_BUFFER_SIZE
-# define TERMINATE_BUFFER_SIZE (PATH_MAX + 64)
+#  define TERMINATE_BUFFER_SIZE 4160
 # endif
 
 typedef struct s_pipeline	t_pipeline;
@@ -55,12 +55,12 @@ struct s_pipeline {
 	int		oflag;
 };
 
-int	close_stdio(int *stdio);
-int	execute_child(t_pipeline *pipeline);
-int	heredoc(const char *argv_0, const char *delimiter);
-int	init_stdio(t_pipeline *pipeline, int *upstream);
-int	pipex(int ac, char **av, char **envp, int upstream);
-int	terminate(const char *s, int status);
+int		close_stdio(int *stdio);
+int		execute_child(t_pipeline *pipeline);
+int		heredoc(const char *argv_0, const char *delimiter);
+int		init_stdio(t_pipeline *pipeline, int *upstream);
+int		pipex(int ac, char **av, char **envp, int upstream);
+int		terminate(const char *s, int status);
 
 pid_t	create_child(t_pipeline *pipeline, int last_stdin);
 
