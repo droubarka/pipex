@@ -18,11 +18,10 @@ CC = cc
 CFLAGS = -Wall -Wextra -Werror -I $(INC_DIR)
 
 NAME = pipex
-NAME_MANDATORY = pipex_mandatory
-NAME_BONUS = pipex_bonus
+NAME_MANDATORY = .pipex_mandatory
+NAME_BONUS = .pipex_bonus
 
-.PHONY: clean
-#vpath
+.PHONY: clean $(OBJ_DIR)
 
 UTILS_DIR = $(SRC_DIR)/utils
 UTILS_FILES = \
@@ -50,26 +49,40 @@ SRC_FILES = \
 	$(SRC_DIR)/terminate.c \
 	$(UTILS_FILES)
 
+INC_FILES = \
+	$(INC_DIR)/get_next_line.h \
+	$(INC_DIR)/pipex.h \
+	$(INC_DIR)/utils.h
+
 MANDATORY_SRCS = $(SRC_FILES) $(SRC_DIR)/main.c
-MANDATORY_OBJS = $(patsubst %.c, %.o, $(MANDATORY_SRCS))
-
 BONUS_SRCS = $(SRC_FILES) $(SRC_DIR)/main_bonus.c $(SRC_DIR)/heredoc.c
-BONUS_OBJS = $(patsubst %.c, %.o, $(BONUS_SRCS))
 
-all: $(NAME_MANDATORY)
+MANDATORY_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(MANDATORY_SRCS))
+BONUS_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(BONUS_SRCS))
+
+all: $(NAME_MANDATORY) $(NAME_BONUS)
 
 bonus: $(NAME_BONUS)
 
-$(NAME_MANDATORY): $(MANDATORY_OBJS)
+$(NAME_MANDATORY): $(INC_FILES) $(MANDATORY_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MANDATORY_OBJS)
+	ln -sf $(NAME_MANDATORY) $(NAME)
 
-$(NAME_BONUS): $(BONUS_OBJS)
+$(NAME_BONUS): $(INC_FILES) $(BONUS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(BONUS_OBJS)
+	ln -sf $(NAME_BONUS) $(NAME)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(OBJ_DIR):
+	@mkdir -v -p $(OBJ_DIR)
+	@mkdir -v -p $(OBJ_DIR)/utils
 
 clean:
-	@rm -rfv $(MANDATORY_OBJS) $(BONUS_OBJS)
+	@rm -v -rf $(MANDATORY_OBJS) $(BONUS_OBJS)
 
 fclean: clean
-	@rm -rfv $(NAME) $(NAME_MANDATORY) $(NAME_BONUS)
+	@rm -v -rf $(NAME) $(NAME_MANDATORY) $(NAME_BONUS)
 
 re: fclean all

@@ -33,8 +33,7 @@ static char	*get_pathname(char **path, char *cmdname)
 		temp = pathjoin(*path, cmdname);
 		if (temp == NULL)
 		{
-			terminate("malloc", -1);
-			return (free(pathname), NULL);
+			return (terminate("malloc", -1), free(pathname), NULL);
 		}
 		if (access(temp, F_OK) == 0)
 		{

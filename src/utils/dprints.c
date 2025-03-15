@@ -24,5 +24,6 @@ int	dprints(int fd, unsigned int argN, ...)
 		ft_strlcat(buffer, va_arg(ap, char *), DPRINTS_BUFFER_SIZE);
 	}
 	va_end(ap);
-	return (write(fd, buffer, ft_strlen(buffer)));
+	write(fd, buffer, ft_strlen(buffer));
+	return (1);
 }

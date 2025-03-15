@@ -45,7 +45,7 @@ static int	wait_childs(pid_t last_child)
 			if (WIFEXITED(stat_loc))
 				exit_status = WEXITSTATUS(stat_loc);
 			else if (WIFSIGNALED(stat_loc))
-				exit_status = 1 << 7 | WTERMSIG(stat_loc);
+				exit_status = 1 << 7 | WTERMSIG(stat_loc); //? WCOREDUMP
 		}
 	}
 	if (last_child == -1)

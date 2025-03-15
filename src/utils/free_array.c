@@ -27,5 +27,5 @@ int	free_array(char **array)
 		free(root);
 		return (1);
 	}
-	return (1);
+	return (0);
 }
