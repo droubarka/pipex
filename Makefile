@@ -21,8 +21,6 @@ NAME = pipex
 NAME_MANDATORY = .pipex_mandatory
 NAME_BONUS = .pipex_bonus
 
-.PHONY: clean X
-
 UTILS_DIR = $(SRC_DIR)/utils
 UTILS_FILES = \
 	$(UTILS_DIR)/create_zombie.c \
@@ -60,6 +58,34 @@ BONUS_SRCS = $(SRC_FILES) $(SRC_DIR)/main_bonus.c $(SRC_DIR)/heredoc_bonus.c
 MANDATORY_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(MANDATORY_SRCS))
 BONUS_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(BONUS_SRCS))
 
+
+PREBUILD = $(OBJ_DIR) $(OBJ_DIR)/utils
+$(PREBUILD):
+	@mkdir -v -p $@
+
+SYMB_LINKS = MANDATORY BONUS
+$(SYMB_LINKS):
+	@if [ "$(realpath $(NAME))" = "" ]; then \
+		ln -svf $(NAME_$@) $(NAME); \
+	elif [ "$(realpath $(NAME_$@))" != "$(realpath $(NAME))" ]; then \
+		ln -svf $(NAME_$@) $(NAME); \
+	else \
+		echo "make: '$(NAME)' -> '$(NAME_$@)' is up to date."; \
+	fi
+#ifneq "$(realpath $(NAME_$@))" "$(realpath $(NAME))"
+#	@ln -svf $(NAME_$@) $(NAME)
+#	@echo neq
+#else ifeq ($(realpath $(NAME)),)
+#	ln -svf $(NAME_$@) $(NAME)
+#	@echo eq
+#else
+#	@echo done
+#endif
+
+
+.DEFAULT_GOAL = all
+.PHONY: clean $(SYMB_LINKS)
+
 all: $(NAME_MANDATORY)
 
 bonus: $(NAME_BONUS)
@@ -69,19 +95,6 @@ $(NAME_MANDATORY): $(INC_FILES) $(MANDATORY_OBJS) | MANDATORY
 
 $(NAME_BONUS): $(INC_FILES) $(BONUS_OBJS) | BONUS
 	$(CC) $(CFLAGS) -o $@ $(BONUS_OBJS)
-
-SYMB_LINKS = MANDATORY BONUS
-$(SYMB_LINKS):
-ifeq ($(realpath $(NAME)),)
-	@ln -sf $(NAME_$@) $(NAME)
-endif
-ifneq ($(realpath $(NAME_$@)),$(realpath $(NAME)))
-	@ln -sf $(NAME_$@) $(NAME)
-endif
-
-PREBUILD = $(OBJ_DIR) $(OBJ_DIR)/utils
-$(PREBUILD):
-	@mkdir -v -p $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(PREBUILD)
 	$(CC) $(CFLAGS) -c -o $@ $<
