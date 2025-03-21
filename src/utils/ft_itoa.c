@@ -14,7 +14,11 @@
 
 static int	ft_abs(int n)
 {
-	return (-n * (n < 0) + n * (0 < n));
+	if (n < 0)
+	{
+		return (-n);
+	}
+	return (n);
 }
 
 static int	countdigits(int n)

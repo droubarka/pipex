@@ -26,9 +26,9 @@ static char	*handle_eof(t_buffer *cache)
 			nextline[cache->size] = 0;
 		}
 	}
-	cache->size = 0;
 	free(cache->data);
 	cache->data = NULL;
+	cache->size = 0;
 	return (nextline);
 }
 
@@ -84,7 +84,6 @@ static char	*read_buffer(int fd, t_buffer *cache, t_buffer *buffer)
 		{
 			free(cache->data);
 			cache->size = 0;
-			buffer->data = NULL;
 			return (NULL);
 		}
 		if (line_ssize != 0)
