@@ -15,14 +15,9 @@
 
 # include "get_next_line.h"
 
-# include <linux/limits.h>
 # include <stdarg.h>
 # include <stdlib.h>
 # include <unistd.h>
-
-# ifndef ARG_MAX
-#  define ARG_MAX 131072
-# endif
 
 # ifndef DPRINTS_BUFFER_SIZE
 #  define DPRINTS_BUFFER_SIZE 131136

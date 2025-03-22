@@ -58,7 +58,6 @@ BONUS_SRCS = $(SRC_FILES) $(SRC_DIR)/main_bonus.c $(SRC_DIR)/heredoc_bonus.c
 MANDATORY_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(MANDATORY_SRCS))
 BONUS_OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(BONUS_SRCS))
 
-
 PREBUILD = $(OBJ_DIR) $(OBJ_DIR)/utils
 $(PREBUILD):
 	@mkdir -v -p $@
@@ -70,18 +69,8 @@ $(SYMB_LINKS):
 	elif [ "$(realpath $(NAME_$@))" != "$(realpath $(NAME))" ]; then \
 		ln -svf $(NAME_$@) $(NAME); \
 	else \
-		echo "make: '$(NAME)' -> '$(NAME_$@)' is up to date."; \
+		echo "make: '$(NAME)' is up to date."; \
 	fi
-#ifneq "$(realpath $(NAME_$@))" "$(realpath $(NAME))"
-#	@ln -svf $(NAME_$@) $(NAME)
-#	@echo neq
-#else ifeq ($(realpath $(NAME)),)
-#	ln -svf $(NAME_$@) $(NAME)
-#	@echo eq
-#else
-#	@echo done
-#endif
-
 
 .DEFAULT_GOAL = all
 .PHONY: clean $(SYMB_LINKS)

@@ -62,7 +62,7 @@ static pid_t	create_childs(t_pipeline *pipeline, int last_stdin)
 	pipeline->current_child_rank = 0;
 	while (pipeline->current_child_rank < pipeline->total_childs)
 	{
-		last_child_pid = 0;
+		last_child_pid = -2;
 		child->cmdline = pipeline->cmdlines[pipeline->current_child_rank];
 		if (init_stdio(pipeline, &last_stdin) == -1)
 			break ;
